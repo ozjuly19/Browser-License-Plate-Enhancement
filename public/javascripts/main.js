@@ -33,6 +33,11 @@ function log(message) {
     // y += 30; // Adjust this value to change the line spacing
 }
 
+// Call this to change the color of the log element
+function changeLogColor(color) {
+    document.getElementById('log').style.color = color;
+}
+
 function initalize() {
     // Get the image
     image = document.getElementById('source');
@@ -47,7 +52,17 @@ function initalize() {
     canvas1.width = image.width;
     canvas1.height = image.height;
 
-    ctx1.drawImage(image, 0, 0);
+    // Draw the image to the canvas
+    try {
+        ctx1.drawImage(image, 0, 0);
+    } catch { // Error occured likely no image was passed to the source element
+        changeLogColor('red');
+        log('Failed to draw image to canvas, check if the folder /images exists and if picam is working...');
+        return false;
+    }
+
+    // No errors occured
+    return true;
 }
 
 async function runModel() {
@@ -97,10 +112,10 @@ function grabPrediction(prediciton) {
     // Check if the box property exists
     if (!box) {
         log('Failed to detect plate');
-        document.getElementById('log').style.color = 'red';
+        changeLogColor('red');
         return;
     } else {
-        document.getElementById('log').style.color = 'green';
+        changeLogColor('green');
     }
 
     // Define a zoom factor
@@ -128,7 +143,7 @@ function reset() {
     document.getElementById('log').value = '';
 
     // Reset the log color
-    document.getElementById('log').style.color = '#3498db';
+    changeLogColor('#3498db');
 
     // Reset the log y position
     // y = 30;
@@ -191,8 +206,6 @@ async function loop() {
 // Wait for page to load completely
 window.onload = () => {
     // Do one time initalizations on page load
-    initalize();
-
-    // Main loop
-    loop();
+    if (initalize()) // Continue unless an error occured
+        loop(); // Main loop
 };
