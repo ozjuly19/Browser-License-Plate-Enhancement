@@ -10,52 +10,93 @@
 //                                  Definitions                                    \\
 // ------------------------------------------------------------------------------- \\
 
-// Define model
+// Basic definitions
 let model;
-
-// Get the canvases and their contexts
-const canvas1 = document.getElementById('canvas1');
-const ctx1 = canvas1.getContext('2d');
-const canvas2 = document.getElementById('canvas2');
-const ctx2 = canvas2.getContext('2d');
-
 let image;
-
-// Define the model URL
 const modelUrl = '/models/v2/model.json';
+const { canvas: canvas1, context: ctx1 } = getCanvasAndContext('canvas1');
+const { canvas: canvas2, context: ctx2 } = getCanvasAndContext('canvas2');
+
+// Define options for running the prediction
+const options = {
+    score: 0.6,
+    iou: 0.5,
+    topk: 20
+};
 
 // ------------------------------------------------------------------------------- \\
 //                                  Functions                                      \\
 // ------------------------------------------------------------------------------- \\
 
-// Add each log message to a array and return them all at once
-// let y = 30;
-let messages = [];
-function log(message) {
-    console.log(message);
-    messages.push(message);
-    document.getElementById('log').value = messages.join('\n');
-
-    // // Draw the log text0
-    // ctx1.fillStyle = 'white';
-    // ctx1.font = '20px Arial';
-    // ctx1.fillText(message, 10, y);
-    // y += 30; // Adjust this value to change the line spacing
+// Define the canvas and context
+function getCanvasAndContext(id) {
+    const canvas = document.getElementById(id);
+    const context = canvas.getContext('2d');
+    return { canvas, context };
 }
 
-// Call this to change the color of the log element
-function changeLogColor(color) {
-    document.getElementById('log').style.color = color;
-}
+// Define the log object with messages as a property
+const log = {
+    // Array to store log messages
+    messages: [],
 
-function initalize() {
-    // Get the image
-    image = document.getElementById('source');
+    // Method to log informational messages
+    info: function (message) {
+        // Log the message to the console
+        console.log(message);
+        // Add the message to the messages array with an "INFO" prefix
+        this.messages.push(`INFO: ${message}`);
+        // Update the 'log' element in the HTML to display the updated messages
+        document.getElementById('log').value = this.messages.join('\n');
+    },
 
-    // Hide the loading spinner
+    // Method to log error messages
+    error: function (message) {
+        // Log the error message to the console
+        console.error(message);
+        // Add the error message to the messages array with an "ERROR" prefix
+        this.messages.push(`ERROR: ${message}`);
+        // Update the 'log' element in the HTML to display the updated messages
+        document.getElementById('log').value = this.messages.join('\n');
+        // Update the color of the 'log' element
+        this.color('red');
+    },
+
+    // Method to log warning messages
+    warn: function (message) {
+        // Log the warning message to the console
+        console.warn(message);
+        // Add the warning message to the messages array with a "WARN" prefix
+        this.messages.push(`WARN: ${message}`);
+        // Update the 'log' element in the HTML to display the updated messages
+        document.getElementById('log').value = this.messages.join('\n');
+    },
+
+    color: function (color) {
+        // Change the color of the element with the id 'log'
+        document.getElementById('log').style.color = color;
+    },
+
+    clear: function () {
+        // Reset the log color
+        log.color('#3498db');
+        
+        // Clear the messages array and the 'log' element in the HTML
+        this.messages = [];
+
+        // Update the 'log' element in the HTML to display the updated messages
+        document.getElementById('log').value = '';
+    }
+};
+
+async function initialize() {
+    // Get the image and canvas elements
+    const image = document.getElementById('source');
+    const canvas1 = document.getElementById('canvas1');
+    const ctx1 = canvas1.getContext('2d');
+
+    // Hide the loading spinner and show content
     document.getElementById('spinner').style.display = 'none';
-
-    // Show content
     document.getElementById('content').style.display = '';
 
     // Set canvas data    
@@ -65,163 +106,147 @@ function initalize() {
     // Draw the image to the canvas
     try {
         ctx1.drawImage(image, 0, 0);
-    } catch { // Error occured likely no image was passed to the source element
-        changeLogColor('red');
-        log('Failed to draw image to canvas, check if the folder /images exists and if picam is working...');
+    } catch {
+        log.error('Failed to draw image to canvas, check if the folder /images exists and if picam is working...');
         return false;
     }
 
-    // Get the model
-    log('Fetching model...');
-    // When the model is loaded set the model variable to the model
-    // Declare model at the top level of your script
-    model = tf.automl.loadObjectDetection(modelUrl).then((loadedModel) => {
-        model = loadedModel;
-        log('Model loaded!');
-    }).catch(err => {
-        changeLogColor('red');
-        log('Failed to load model, check if the model exists and if the model is valid...');
+    // Load the model
+    log.info('Fetching model...');
+    try {
+        model = await tf.automl.loadObjectDetection(modelUrl);
+        log.info('Model loaded!');
+    } catch (err) {
+        log.error('Failed to load model, check if the model exists and if the model is valid...');
         console.log(err);
         return false;
-    });
+    }
 
-    // Now you can use model in your other functions
-
-    // No errors occured
+    // No errors occurred
     return true;
 }
 
 async function runModel() {
-    // Make sure model is loaded if it is log "using cached model"
-    await model;
-    log('Using cached model...')
+    // Log that we're using the cached model
+    log.info('Using cached model...');
 
-    // run prediction
-    const options = {
-        score: 0.6,
-        iou: 0.5,
-        topk: 20
-    };
+    // Log that we're starting detection
+    log.info('Detecting...');
 
-    log('Detecting...');
-
-    return await model.detect(image, options);
+    // Wait for the model to load and run prediction
+    return await (await model).detect(image, options);
 }
 
 function greyscale() {
     const imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
+    const d = imgData.data;
+    const PIXEL_STEP = 4; // Each pixel is 4 values (r, g, b, a)
 
-    var d = imgData.data;
-    // loop through all pixels
-    // each pixel is decomposed in its 4 rgba values
-    for (var i = 0; i < d.length; i += 4) {
-        // get the medium of the 3 first values ( (r+g+b)/3 )
-        var med = (d[i] + d[i + 1] + d[i + 2]) / 3;
-        // set it to each value (r = g = b = med)
-        d[i] = d[i + 1] = d[i + 2] = med;
-        // we don't touch the alpha
+    // Loop through all pixels
+    for (let i = 0; i < d.length; i += PIXEL_STEP) {
+        // Calculate the average of the r, g, b values
+        const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
+
+        // Set r, g, b values to the average (greyscale)
+        d[i] = d[i + 1] = d[i + 2] = avg;
     }
-    // redraw the new computed image
+
+    // Redraw the new computed image
     ctx1.putImageData(imgData, 0, 0);
 
-    // Set the source to allow the model to procees the greyscale image
+    // Set the source to allow the model to process the greyscale image
     image = canvas1;
 }
 
-function grabPrediction(prediciton) {
-    console.log(prediciton);
+// Function to draw a rectangle on a context
+function drawRect(context, box, color = 'red') {
+    context.beginPath();
+    context.rect(box.left, box.top, box.width, box.height);
+    context.lineWidth = 2;
+    context.strokeStyle = color;
+    context.stroke();
+}
+
+function grabPrediction(prediction) {
+    console.log(prediction);
 
     // Get the first object's box
-    const box = prediciton[0]?.box;
+    const box = prediction[0]?.box;
 
     // Check if the box property exists
     if (!box) {
-        log('Failed to detect plate');
-        changeLogColor('red');
+        log.error('Failed to detect plate');
         return;
     } else {
-        changeLogColor('green');
+        log.color('green');
     }
 
-    // Define a zoom factor
-    // const zoomFactor = 4;
-
-    // Draw the image and the rectangle on the first canvas, and the zoomed-in area on the second canvas, when the image is loaded
-    // Draw the rectangle
-    ctx1.beginPath();
-    ctx1.rect(box.left, box.top, box.width, box.height);
-    ctx1.lineWidth = 2;
-    ctx1.strokeStyle = 'red';
-    ctx1.stroke();
-
-    // Draw the zoomed-in area on the second canvas
-    ctx2.drawImage(image, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
+    // Draw the rectangle on the first canvas
+    drawRect(ctx1, box);
 
     // Draw the zoomed-in area on the second canvas
     ctx2.drawImage(image, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
 }
-
 // Reset for rerun of detection
-function reset() {
-    // Reset the log
-    messages = [];
-    document.getElementById('log').value = '';
+// Reset the log is all that is required (for now...)
+const reset = () => log.clear();
 
-    // Reset the log color
-    changeLogColor('#3498db');
-
-    // Reset the log y position
-    // y = 30;
-}
-
+// Define an asynchronous function to fetch a new image
 async function fetchNewImage() {
-    // Draw to the canvas with the image fetched from /api/take-image
+    // Create a new image object
     const image = new Image();
-    image.src = '/api/realtime?time=' + Date.now();
-    await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = reject;
-    }).then(() => {
-        // Set canvas data    
+    // Set the source of the image to the API endpoint, appending the current time to prevent caching
+    image.src = `/api/realtime?time=${Date.now()}`;
+
+    try {
+        // Wait for the image to load
+        await new Promise((resolve, reject) => {
+            // When the image loads, resolve the promise
+            image.onload = resolve;
+            // If an error occurs while loading the image, reject the promise
+            image.onerror = reject;
+        });
+
+        // Set the width and height of the canvas to match the image
         canvas1.width = image.width;
         canvas1.height = image.height;
 
+        // Draw the image onto the canvas at the top-left corner
         ctx1.drawImage(image, 0, 0);
-    }).catch(err => {
-        console.log(err);
-    });
+    } catch (err) {
+        // If an error occurred at any point in the process, log the error
+        log.error('Error fetching new image:', err);
+    }
 }
-
 // ------------------------------------------------------------------------------- \\
 //                                   Main Loop                                     \\
 // ------------------------------------------------------------------------------- \\
 
 async function loop() {
+    log.info('Starting process...');
+
     // Reset the playing field without erasing the canvas2
     reset();
 
-    log('Staring process...');
-
-    // get the greyscale image data and send it to the canvas
+    // Get the greyscale image data and send it to the canvas
     greyscale();
 
     // Run detections and all that jazz
-    const prediciton = await runModel();
-
-    log('Done detecting');
+    log.info('Running model...');
+    const prediction = await runModel();
+    log.info('Done detecting');
 
     // Write the canvas2 stuffs and get the prediction
-    grabPrediction(prediciton);
+    grabPrediction(prediction);
+    log.info('Done processing!');
 
-    log('Done processing!');
-
-    log('Resetting...')
-
+    // Fetch new image
+    log.info('Fetching new image...');
     await fetchNewImage();
+    log.info('Done resetting');
 
     // Run loop
     loop();
-
 }
 
 // ------------------------------------------------------------------------------- \\
@@ -229,8 +254,8 @@ async function loop() {
 // ------------------------------------------------------------------------------- \\
 
 // Wait for page to load completely
-window.onload = () => {
-    // Do one time initalizations on page load
-    if (initalize()) // Continue unless an error occured
+window.onload = async () => {
+    // Do one time initializations on page load
+    if (await initialize()) // Continue unless an error occurred
         loop(); // Main loop
 };
