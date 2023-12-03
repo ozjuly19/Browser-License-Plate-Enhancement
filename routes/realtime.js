@@ -1,3 +1,8 @@
+// -------------------------------------------------------------- \\
+//            This file will return an image taken from the       \\
+//                     raspberry pi camera module                 \\
+// -------------------------------------------------------------- \\
+
 var express = require('express');
 var router = express.Router();
 
@@ -10,7 +15,7 @@ router.get('/', function (req, res, next) {
   const runCapture = () => {
     return new Promise((resolve, reject) => {
       try {
-        exec('rpicam-still -e png -t 0 --immediate -n 1 --vflip 1 --hflip 1 -o public/images/1.PNG', (err, stdout, stderr) => {
+        exec(`rpicam-still -e png -t 0 --immediate -n 1 --vflip 1 --hflip 1 -o public/images/1.PNG`, (err, stdout, stderr) => {
 
           if (err) {
             console.log('Error taking picture: ' + err);
