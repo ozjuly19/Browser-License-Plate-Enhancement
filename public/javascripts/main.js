@@ -1,7 +1,17 @@
+/***********************************************************************************\
+/                                      TO:DO                                        \
+/***********************************************************************************\
+ * 
+ *  - Ensure image is loaded properly before running the model (possibly not waiting long enough for fs?)
+ *  - Retrain a better model that might actually work and have less false positives. (Maybe train with support for sobel filter?)
+ * 
+ */
 // ------------------------------------------------------------------------------- \\
 //                                  Definitions                                    \\
 // ------------------------------------------------------------------------------- \\
 
+// Define model
+let model;
 
 // Get the canvases and their contexts
 const canvas1 = document.getElementById('canvas1');
@@ -26,7 +36,7 @@ function log(message) {
     messages.push(message);
     document.getElementById('log').value = messages.join('\n');
 
-    // // Draw the log text
+    // // Draw the log text0
     // ctx1.fillStyle = 'white';
     // ctx1.font = '20px Arial';
     // ctx1.fillText(message, 10, y);
@@ -61,19 +71,34 @@ function initalize() {
         return false;
     }
 
+    // Get the model
+    log('Fetching model...');
+    // When the model is loaded set the model variable to the model
+    // Declare model at the top level of your script
+    model = tf.automl.loadObjectDetection(modelUrl).then((loadedModel) => {
+        model = loadedModel;
+        log('Model loaded!');
+    }).catch(err => {
+        changeLogColor('red');
+        log('Failed to load model, check if the model exists and if the model is valid...');
+        console.log(err);
+        return false;
+    });
+
+    // Now you can use model in your other functions
+
     // No errors occured
     return true;
 }
 
 async function runModel() {
-    // load example image and run prediction
-    // const image = await loadImage(passedImage)
-    log('Fetching model...');
-    const model = await tf.automl.loadObjectDetection(modelUrl);
-    await log('Got model');
+    // Make sure model is loaded if it is log "using cached model"
+    await model;
+    log('Using cached model...')
 
+    // run prediction
     const options = {
-        score: 0.4,
+        score: 0.6,
         iou: 0.5,
         topk: 20
     };
