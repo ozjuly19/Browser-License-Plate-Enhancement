@@ -3,116 +3,45 @@
 <head>
     <script src="/javascripts/tf.min.js"></script>
     <script src="/javascripts/tf-automl.min.js"></script>
+    <script src="/javascripts/sobel.js"></script>
+
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-automl@1.3.0/dist/tf-automl.min.js"></script> -->
 </head>
 
 <body style="background-color: #333;">
-    <img id="source" src="/images/1.PNG" style="display:none">
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; height: 100vh;">
-        <canvas id="canvas1" style="max-height: 50vh;"></canvas>
-        <canvas id="canvas2" style="max-height: 50vh;"></canvas>
+    <!-- Spinner -->
+    <div id="spinner"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;">
+        <div
+            style="border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 50%; width: 120px; height: 120px; animation: spin 2s linear infinite;">
+        </div>
     </div>
-    <script>
-        // // Load image from file
-        // async function loadImage(imagePath) {
-        //     const image = new Image();
-        //     image.src = imagePath;
-        //     await new Promise((resolve, reject) => {
-        //         image.onload = resolve;
-        //         image.onerror = reject;
-        //     });
-        //     const canvas = createCanvas(image.width, image.height);
-        //     const ctx = canvas.getContext('2d');
-        //     ctx.drawImage(image, 0, 0);
-        //     return canvas; // return the canvas instead of the ImageData
-        // }
-
-        // Wait for page to load completely
-        window.onload = () => {
-            // Define the model URL
-            const modelUrl = '/models/v1/model.json';
-
-            // Get the image
-            const image = document.getElementById('source');
-
-            // Get the canvases and their contexts
-            const canvas1 = document.getElementById('canvas1');
-            const ctx1 = canvas1.getContext('2d');
-            const canvas2 = document.getElementById('canvas2');
-            const ctx2 = canvas2.getContext('2d');
-
-            canvas1.width = image.width;
-            canvas1.height = image.height;
-
-            ctx1.drawImage(image, 0, 0);
-
-            // Add each log message to a array and return them all at once
-            let y = 30;
-            let messages = [];
-            function log(message) {
-                console.log(message);
-                messages.push(message);
-
-                // Draw the log text
-                ctx1.fillStyle = 'white';
-                ctx1.font = '20px Arial';
-                ctx1.fillText(message, 10, y);
-                y += 30; // Adjust this value to change the line spacing
-            }
-
-            async function runModel() {
-                // load example image and run prediction
-                // const image = await loadImage(passedImage)
-                log('Fetching model...');
-                const model = await tf.automl.loadObjectDetection(modelUrl);
-                await log('Got model');
-
-                const options = {
-                    score: 0.5,
-                    iou: 0.5,
-                    topk: 20
-                };
-
-                log('Detecting...');
-
-                return await model.detect(image, options);
-            }
-
-            // End declarations
-
-            log('Staring process...');
-
-            runModel().then((prediciton) => {
-                log('Done detecting');
-                log('Zooming plate...');
-
-                // Get the first object's box
-                const box = prediciton[0].box;
-
-                // Define a zoom factor
-                const zoomFactor = 4;
-
-                // Draw the image and the rectangle on the first canvas, and the zoomed-in area on the second canvas, when the image is loaded
-                // Draw the rectangle
-                ctx1.beginPath();
-                ctx1.rect(box.left, box.top, box.width, box.height);
-                ctx1.lineWidth = 2;
-                ctx1.strokeStyle = 'red';
-                ctx1.stroke();
-
-                // Draw the zoomed-in area on the second canvas
-                ctx2.drawImage(image, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
-                
-                // Define a contrast factor
-                let contrast = 2; // Adjust this value to change the contrast
-
-                // Draw the zoomed-in area on the second canvas
-                ctx2.drawImage(image, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
-
-                log('Done processing!');
-            });
-        };
-
-    </script>
+    <main id="content" style="display:none">
+        <!-- End spinner -->
+        <img id="source" src="/api/realtime" style="display:none">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; height: 100vh;">
+            <canvas id="canvas1" style="max-height: 50vh;"></canvas>
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <textarea id="log"
+                    style="width: 200px; height: 150px; margin-right: 20px; background-color: #444; color: rgb(150, 222, 209); border: none; padding: 10px; overflow: auto;"></textarea>
+                <canvas id="canvas2" style="max-height: 50vh;"></canvas>
+            </div>
+        </div>
+    </main>
+    <script src="/javascripts/main.js"></script>
 </body>
 
 </html>

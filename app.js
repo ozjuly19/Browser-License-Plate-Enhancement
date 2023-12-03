@@ -14,6 +14,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/api/realtime', require('./routes/realtime'));
 app.use('/models', express.static('models'));
 
 module.exports = app;
