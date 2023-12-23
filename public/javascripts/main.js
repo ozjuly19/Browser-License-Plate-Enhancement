@@ -11,6 +11,7 @@
 // ------------------------------------------------------------------------------- \\
 
 // Basic definitions
+let kill = false; // Allow the loop to run otherwise when developing you can stop the loop
 let model;
 const modelUrl = '/models/v2/model.json';
 const { canvas: canvas1, context: ctx1 } = getCanvasAndContext('canvas1');
@@ -79,7 +80,7 @@ const log = {
     clear: function () {
         // Reset the log color
         log.color('#3498db');
-        
+
         // Clear the messages array and the 'log' element in the HTML
         this.messages = [];
 
@@ -206,6 +207,7 @@ async function loop() {
 
     // Reset the playing field without erasing the canvas2
     reset();
+    log.info('Done resetting');
 
     // Run detections and all that jazz
     log.info('Running model...');
@@ -216,10 +218,15 @@ async function loop() {
     grabPrediction(prediction);
     log.info('Done processing!');
 
+    // Stop looping in development if needed
+    if (kill) {
+        log.info("Loop explicitly killed...");
+        return;
+    }
+
     // Fetch new image
     log.info('Fetching new image...');
     await fetchNewImage();
-    log.info('Done resetting');
 
     // Run loop
     loop();
