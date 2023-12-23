@@ -138,12 +138,11 @@ async function runModel() {
 }
 
 // Function to draw a rectangle on a context
-function drawRect(context, box, color = 'red') {
+function fillRect(context, box, color = 'red') {
     context.beginPath();
     context.rect(box.left, box.top, box.width, box.height);
-    context.lineWidth = 2;
-    context.strokeStyle = color;
-    context.stroke();
+    context.fillStyle = color;
+    context.fill();
 }
 
 function grabPrediction(prediction) {
@@ -160,11 +159,11 @@ function grabPrediction(prediction) {
         log.color('green');
     }
 
-    // Draw the rectangle on the first canvas
-    drawRect(ctx1, box);
-
     // Draw the zoomed-in area on the second canvas
     ctx2.drawImage(canvas1, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
+    
+    // Draw the rectangle on the first canvas
+    fillRect(ctx1, box);
 }
 // Reset for rerun of detection
 // Reset the log is all that is required (for now...)
