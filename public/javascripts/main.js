@@ -137,27 +137,6 @@ async function runModel() {
     return await (await model).detect(image, options);
 }
 
-function greyscale() {
-    const imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
-    const d = imgData.data;
-    const PIXEL_STEP = 4; // Each pixel is 4 values (r, g, b, a)
-
-    // Loop through all pixels
-    for (let i = 0; i < d.length; i += PIXEL_STEP) {
-        // Calculate the average of the r, g, b values
-        const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
-
-        // Set r, g, b values to the average (greyscale)
-        d[i] = d[i + 1] = d[i + 2] = avg;
-    }
-
-    // Redraw the new computed image
-    ctx1.putImageData(imgData, 0, 0);
-
-    // Set the source to allow the model to process the greyscale image
-    image = canvas1;
-}
-
 // Function to draw a rectangle on a context
 function drawRect(context, box, color = 'red') {
     context.beginPath();
@@ -227,9 +206,6 @@ async function loop() {
 
     // Reset the playing field without erasing the canvas2
     reset();
-
-    // Get the greyscale image data and send it to the canvas
-    greyscale();
 
     // Run detections and all that jazz
     log.info('Running model...');
