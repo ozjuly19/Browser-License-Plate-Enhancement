@@ -8,7 +8,7 @@ This project is a simple license plate detection script that uses TensorflowJS t
 The index will call [realtime.js](routes/realtime.js) and await the realtime image. When the image is received it will be process by Tensorflow, and this entire section of the app is run in [public/](public/) which is client side only.
 
 ## [realtime.js](routes/realtime.js)
-The images are gathered using the file [realtime.js](routes/realtime.js) temporarily saving the image to /run/pen.png or a tempfs of your choice. Make sure the user executing this node project has authority to save inside /run/ or you will face a permissions error.
+The images are gathered using the file [realtime.js](routes/realtime.js) temporarily saving the image to /run/pen.jpg or a tempfs of your choice. Make sure the user executing this node project has authority to save inside /run/ or you will face a permissions error.
 
 # Important Notes:
 
