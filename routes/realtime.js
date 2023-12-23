@@ -9,7 +9,7 @@ var router = express.Router();
 const { exec } = require('child_process');
 
 // Define the command to capture an image using the Raspberry Pi camera
-const COMMAND = `sudo raspistill -t 1 -ex auto -awb auto -fli auto -ifx denoise -n -o /run/1.PNG`;
+const COMMAND = `raspistill -t 1 -ex auto -awb auto -fli auto -ifx denoise -n -o /run/pen.png`;
 
 // Define the maximum number of retries if capturing an image fails
 const RETRY_LIMIT = 3;
@@ -58,7 +58,7 @@ router.get('/', function (req, res, next) {
     // If an error occurred, log the error
     .catch(err => console.error('Error: ', err))
     // Finally, send the captured image as a response
-    .finally(() => res.sendFile(`/run/1.PNG`));
+    .finally(() => res.sendFile(`/run/pen.png`));
 });
 
 // Export the router
