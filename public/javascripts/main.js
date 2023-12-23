@@ -12,7 +12,6 @@
 
 // Basic definitions
 let model;
-let image;
 const modelUrl = '/models/v2/model.json';
 const { canvas: canvas1, context: ctx1 } = getCanvasAndContext('canvas1');
 const { canvas: canvas2, context: ctx2 } = getCanvasAndContext('canvas2');
@@ -134,7 +133,7 @@ async function runModel() {
     log.info('Detecting...');
 
     // Wait for the model to load and run prediction
-    return await (await model).detect(image, options);
+    return await (await model).detect(canvas1, options);
 }
 
 // Function to draw a rectangle on a context
@@ -164,7 +163,7 @@ function grabPrediction(prediction) {
     drawRect(ctx1, box);
 
     // Draw the zoomed-in area on the second canvas
-    ctx2.drawImage(image, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
+    ctx2.drawImage(canvas1, box.left, box.top, box.width, box.height, 0, 0, canvas2.width, canvas2.height);
 }
 // Reset for rerun of detection
 // Reset the log is all that is required (for now...)
@@ -197,6 +196,7 @@ async function fetchNewImage() {
         log.error('Error fetching new image:', err);
     }
 }
+
 // ------------------------------------------------------------------------------- \\
 //                                   Main Loop                                     \\
 // ------------------------------------------------------------------------------- \\
