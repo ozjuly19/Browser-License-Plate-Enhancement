@@ -107,7 +107,7 @@ async function initialize() {
     try {
         ctx1.drawImage(image, 0, 0);
     } catch {
-        log.error('Failed to draw image to canvas, check if the folder /images exists and if picam is working...');
+        log.error('Failed to draw image to canvas, check if the image capture on /api/realtime is working...');
         return false;
     }
 
