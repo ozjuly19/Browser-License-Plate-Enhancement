@@ -9,7 +9,7 @@ var router = express.Router();
 const { exec } = require('child_process');
 
 // Define the command to capture an image using the Raspberry Pi camera with sudo to run as root so we can safely store it in /run without permissions issues
-const COMMAND = `sudo raspistill -t 1 -ex auto -awb auto -fli auto -ifx denoise -n -o /run/pen.jpg`;
+const COMMAND = `sudo raspistill -t 1 -ex auto -awb auto -fli auto -n -o /run/pen.jpg`;
 
 // Define the maximum number of retries if capturing an image fails
 const RETRY_LIMIT = 3;
